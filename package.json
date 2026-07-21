@@ -1,0 +1,21 @@
+{
+  "name": "final-project-awa",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "cd client && npm install",
+    "dev:client": "cd client && npm run dev",
+    "preinstall": "cd server && npm install",
+    "dev:server": "cd server && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start"
+  },
+  "dependencies": {
+    "mui": "^0.0.1"
+  }
+}
