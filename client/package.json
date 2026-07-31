@@ -15,8 +15,10 @@
     "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.2.0",
     "@mui/x-data-grid": "^9.10.0",
+    "@react-pdf/renderer": "^4.5.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-pdf-html": "^2.1.5",
     "react-quill-new": "^3.8.3",
     "react-router-dom": "^7.18.1"
   },

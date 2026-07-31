@@ -75,6 +75,7 @@ export const Login = () => {
         >
             <h2>Login</h2>
             <TextField 
+                data-cy="login-email"
                 required
                 id="email"
                 label="Email"
@@ -85,6 +86,7 @@ export const Login = () => {
             />
             
             <TextField 
+                data-cy="login-password"
                 required
                 id="password"
                 label="Password"
@@ -94,7 +96,7 @@ export const Login = () => {
                 error={Boolean(errors.password)}
                 helperText={errors.password}
             />
-            <Button variant="contained" sx={{ width: '25ch', m: 1 }} color="primary" onClick={() => fetchData(email, password)}>Login</Button>
+            <Button data-cy="login-submit" variant="contained" sx={{ width: '25ch', m: 1 }} color="primary" onClick={() => fetchData(email, password)}>Login</Button>
             
         </Box>
     </div>

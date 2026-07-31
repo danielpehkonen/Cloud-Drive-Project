@@ -80,6 +80,7 @@ export const Home = () => {
           </Tabs>
 
           <Button
+            data-cy="create-document"
             variant="contained"
             sx={{
               ml: {
@@ -103,7 +104,7 @@ export const Home = () => {
 
         {tab === 1 && (
           <Typography>
-            Trashed documents appear here
+            Trashed documents appear here (coming in the next update!)
           </Typography>
         )}
       </Box>

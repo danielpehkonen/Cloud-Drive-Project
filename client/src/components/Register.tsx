@@ -73,6 +73,7 @@ export const Register = () => {
             autoComplete='off'
         >
             <TextField 
+                data-cy="register-email"
                 required
                 id="email"
                 label="Email"
@@ -82,6 +83,7 @@ export const Register = () => {
                 helperText={errors.email}
             />
             <TextField 
+                data-cy="register-username"
                 required
                 id="username"
                 label="Username"
@@ -92,6 +94,7 @@ export const Register = () => {
             />
             
             <TextField 
+                data-cy="register-password"
                 required
                 id="password"
                 label="Password"
@@ -101,7 +104,7 @@ export const Register = () => {
                 error={Boolean(errors.password)}
                 helperText={errors.password}
             />
-            <Button variant="contained" sx={{ width: '25ch', m: 1 }} color="primary" onClick={() => fetchData(email, username, password)}>Register</Button>
+            <Button data-cy="register-submit" variant="contained" sx={{ width: '25ch', m: 1 }} color="primary" onClick={() => fetchData(email, username, password)}>Register</Button>
             
         </Box>
         

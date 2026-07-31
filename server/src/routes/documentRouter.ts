@@ -1,8 +1,8 @@
 import {Router, Request, Response} from "express"
 import { DriveDocument, IDriveDocument } from "../models/Document";
-import { validateToken, CustomRequest } from "../../middleware/validateToken";
+import { validateToken, CustomRequest } from "../middleware/validateToken";
 import { body, Result, ValidationError, validationResult } from "express-validator";
-import { addEditorValidators } from "../../validators/inputValidation";
+import { addEditorValidators } from "../validators/inputValidation";
 import { User } from "../models/User";
 import crypto from "crypto"
 
@@ -99,9 +99,15 @@ documentRouter.put("/:documentId", validateToken, async (req: CustomRequest, res
 
         const updatedDocument = await DriveDocument.findOneAndUpdate({
             _id: req.params.documentId,
+
+            // Must own active lock
+            lockedBy: req.user?._id,
+            lockExpiration: { $gt: new Date()},
+
+            // User is owner or editor
             $or: [
                 { ownerId: req.user?._id},
-                { editorIds: req.user?._id}
+                { editorIds: req.user?._id},
             ]
             },
             {
@@ -218,6 +224,73 @@ documentRouter.get("/public/:shareToken", async (req: Request, res: Response) =>
         }
 
         return res.status(200).json(document)
+    } catch (error: any) {
+        console.log(error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+})
+
+// Lock a document and the lock expires after
+documentRouter.patch("/:documentId/lock", validateToken, async (req: CustomRequest, res: Response) => {
+    try {
+        const currentDate = new Date();
+        const lockExpiration = new Date(Date.now() + 60_000);
+
+        // User requires access to the document and can't be locked by another user to update lock
+        const document = await DriveDocument.findOneAndUpdate(
+            {
+                _id: req.params.documentId,
+
+                $and: [
+                    {
+                        $or: [
+                            { ownerId: req.user?._id },
+                            { editorIds: req.user?._id }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { lockedBy: null },
+                            {lockedBy: req.user?._id},
+                            { lockExpiration: {$lt: currentDate}}
+                        ]
+                    }
+                ]
+            },
+            {
+                $set: {lockedBy: req.user?._id, lockExpiration}
+            },
+            {
+                returnDocument: "after"
+            }
+        );
+
+        if (!document) {
+            return res.status(423).json({message: "Document is being edited by another user"});
+        }
+
+        return res.status(200).json({message: "Document locked successfully"});
+    } catch (error: any) {
+        console.log(error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+})
+
+// Remove lock from document
+documentRouter.delete("/:documentId/lock", validateToken, async (req: CustomRequest, res: Response) => {
+    try {
+        const document = await DriveDocument.findOneAndUpdate(
+            {
+                _id: req.params.documentId,
+                lockedBy: req.user?._id,
+
+            },
+            {
+                $set: {lockedBy: null, lockExpiration: null}
+            }
+        );
+
+        return res.status(200).json({message: "Lock released successfully"});
     } catch (error: any) {
         console.log(error);
         return res.status(500).json({message: "Internal server error"});

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import IconButton from "@mui/material/IconButton";
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import { TextField } from '@mui/material';
 
 interface IDocument {
   _id: string,
@@ -30,6 +31,7 @@ interface IDocumnetRow {
 export const DocumentList = () => {
   const [rows, setRows] = useState<IDocumnetRow[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [search, setSearch] = useState<string>("");
 
   const navigate = useNavigate()
 
@@ -78,6 +80,7 @@ export const DocumentList = () => {
     width: 100,
     renderCell: (params) => (
       <IconButton
+        data-cy="delete-document"
         color='error'
         onClick={(event) => {
           event.stopPropagation();
@@ -132,10 +135,24 @@ useEffect(() => {
   getDocuments();
 }, [])
 
+// Search functionality for document list
+const filteredRows = rows.filter((row) => 
+    row.documentName
+      .toLowerCase()
+      .includes(search.trim().toLowerCase())
+    );
+
   return (
     <Paper sx={{ height: 400, width: '100%' }}>
+      <TextField
+        data-cy="search-document"
+        label="Search documents"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        size='small'
+      />
       <DataGrid
-        rows={rows}
+        rows={filteredRows}
         columns={columns}
         loading={loading}
         disableColumnMenu

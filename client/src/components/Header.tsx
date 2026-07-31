@@ -36,7 +36,7 @@ export const Header = ({lightMode, toggleTheme}: HeaderProps) => {
                         {lightMode ? (<DarkModeOutlinedIcon />) : (< LightModeOutlinedIcon />)}
                     </IconButton>
                     {isLoggedIn ? (
-                        <Button color='inherit' onClick={logout}>
+                        <Button data-cy="logout" color='inherit' onClick={logout}>
                             Logout
                         </Button>
                     ) : (

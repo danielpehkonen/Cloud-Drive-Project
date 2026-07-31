@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { loginValidators, registerValidators } from "../../validators/inputValidation";
+import { loginValidators, registerValidators } from "../validators/inputValidation";
 import { body, Result, ValidationError, validationResult } from "express-validator";
 import jwt, {JwtPayload} from "jsonwebtoken"
 import bcrypt from "bcrypt"

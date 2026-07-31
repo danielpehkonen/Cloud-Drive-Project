@@ -16,6 +16,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useParams } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
+import { Pdf } from './Pdf';
 
 interface Notification {
     open: boolean,
@@ -30,10 +32,12 @@ interface IDocument {
 }
 
 
+
 export const DocumentEditor = () => {
     const [title, setTitle] = useState<string>("");
     const [content, setContent] = useState<string>("");
     const  {documentId} = useParams();
+    const [canEdit, setCanEdit] = useState<boolean>(false);
 
     const [notification, setNotification] = useState<Notification>({
         open: false,
@@ -71,6 +75,7 @@ export const DocumentEditor = () => {
         setFileAnchor(null)
     }
 
+    // Get document contents
     useEffect(() => {
         const getDocument = async () => {
             try {
@@ -103,11 +108,80 @@ export const DocumentEditor = () => {
         }
     }, [documentId])
 
-    const saveDocument = async () => {
-        try {
-            setAddingEditor(true);
-            setEditorError("");
+    // Lock the document or if already locked by another user stay in view mode
+    useEffect(() => {
+        if (!documentId) {
+            return;
+        }
 
+        const token = localStorage.getItem("token");
+
+        const getLock = async () => {
+            try {
+
+                const response = await fetch(`/api/document/${documentId}/lock`,
+                    {
+                        method: "PATCH",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if(response.ok) {
+                    setCanEdit(true);
+                } else if (response.status === 423) {
+                    setCanEdit(false);
+                }
+            } catch (error: any) {
+                if (error instanceof Error) {
+                    console.log(error)
+                }
+            }
+        }
+
+        const releaseLock = async () => {
+            fetch(`/api/document/${documentId}/lock`,
+                {
+                        method: "DELETE",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        },
+                        // Let the request finish after closing page
+                        keepalive: true
+                }
+            ).catch((error) => {
+                console.log(error)
+            });
+        }
+
+        getLock();
+
+        // Renew lock every 30 seconds
+        const lockInterval = setInterval(getLock, 30_000);
+
+        // Release lock after closing page
+        window.addEventListener("pagehide", releaseLock)
+
+        
+        return () => {
+            // Stop renewing lock when document is closed (backup for unexpected errors)
+            clearInterval(lockInterval);
+
+            // Remove page event listener
+            window.removeEventListener("pagehide", releaseLock);
+
+            releaseLock();
+        }
+}, [documentId])
+
+    const saveDocument = async () => {
+        // No saving when document is locked by another user
+        if(!canEdit) {
+            return;
+        }
+
+        try {
             const token = localStorage.getItem("token");
 
             const response = await fetch(`/api/document/${documentId}`,
@@ -195,8 +269,10 @@ export const DocumentEditor = () => {
                 throw new Error(data.message);
             }
 
+            // Create share link
             const publicLink = `${window.location.origin}/shared/${data.shareToken}`
 
+            // Copy automatically to clipboard
             await navigator.clipboard.writeText(publicLink)
 
             setNotification({
@@ -208,6 +284,28 @@ export const DocumentEditor = () => {
             if (error instanceof Error) {
                     console.log(error)
                 }
+        }
+    }
+
+    // Export document to pdf
+    const exportPdf = async () => {
+        try {
+            const blob = await pdf(<Pdf content={content} />).toBlob();
+
+            const url = URL.createObjectURL(blob);
+
+            const link = window.document.createElement("a");
+            
+            link.href = url;
+            link.download = `${title.trim() || "Document"}.pdf`;
+
+            link.click();
+
+            URL.revokeObjectURL(url)
+        } catch (error: any) {
+            if (error instanceof Error) {
+                console.log(error)
+            }
         }
     }
 
@@ -234,6 +332,7 @@ export const DocumentEditor = () => {
                 }}
             >
                 <Button
+                    data-cy="file-menu"
                     id={fileButtonId}
                     aria-controls={fileOpen ? fileMenuId : undefined}
                     aria-haspopup="true"
@@ -257,6 +356,7 @@ export const DocumentEditor = () => {
                     }}
                 >
                     <MenuItem
+                        data-cy="save-document"
                         onClick={() => {
                             saveDocument()
                             closeFileMenu()
@@ -266,7 +366,9 @@ export const DocumentEditor = () => {
                     </MenuItem>
 
                     <MenuItem
+                        data-cy="export-pdf"
                         onClick={() => {
+                            exportPdf()
                             closeFileMenu()
                         }}
                     >
@@ -276,6 +378,7 @@ export const DocumentEditor = () => {
                 </Menu>
 
                 <Button
+                    data-cy="add-editor"
                     variant='outlined'
                     color='inherit'
                     onClick={() => {
@@ -287,6 +390,7 @@ export const DocumentEditor = () => {
                 </Button>
 
                 <Button
+                    data-cy="create-public-link"
                     variant='outlined'
                     color='inherit'
                     sx={{
@@ -317,17 +421,24 @@ export const DocumentEditor = () => {
             }}
         >
             <TextField
+                data-cy="document-title"
                 label="Document title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                slotProps={{
+                    input: {
+                        readOnly: !canEdit
+                    }
+                }}
             />
 
             <Box
+                data-cy="document-content"
                 sx={{
                     backgroundColor: "background.paper"
                 }}
             >
-                <ReactQuill theme="snow" value={content} onChange={setContent} />
+                <ReactQuill theme="snow" value={content} onChange={setContent} readOnly={!canEdit}/>
             </Box>
     
         </Box>
@@ -348,6 +459,7 @@ export const DocumentEditor = () => {
 
                 <DialogContent>
                     <TextField
+                        data-cy="editor-email"
                         autoFocus
                         required
                         type='email'
@@ -369,6 +481,7 @@ export const DocumentEditor = () => {
 
                 <DialogActions>
                     <Button
+                        data-cy="cancel-add-editor"
                         onClick={() => {
                             setEditorDialogOpen(false);
                             setEditorError("");
@@ -378,6 +491,7 @@ export const DocumentEditor = () => {
                     </Button>
 
                     <Button
+                        data-cy="confirm-add-editor"
                         variant='contained'
                         onClick={addEditor}
                     >
@@ -394,6 +508,7 @@ export const DocumentEditor = () => {
             anchorOrigin={{vertical: "bottom", horizontal: "left"}}
         >
             <Alert
+                data-cy="notification"
                 severity={notification.severity}
                 variant='filled'
                 onClose={() => setNotification((current) => ({...current, open: false}))}

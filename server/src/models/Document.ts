@@ -11,6 +11,8 @@ interface IDriveDocument extends Document {
     publicShareToken?: string,
     createdAt?: Date,
     updatedAt?: Date
+    lockedBy?: Types.ObjectId,
+    lockExpiration?: Date
 }
 
 // Using 'timestamps' to set createdAt and keep updatedAt up-to-date
@@ -31,7 +33,9 @@ const driveDocumentSchema = new Schema(
             default: []
         },
         public: {type: Boolean, default: false},
-        publicShareToken: {type: String, unique: true, sparse: true}
+        publicShareToken: {type: String, unique: true, sparse: true},
+        lockedBy: {type: Schema.Types.ObjectId, ref: "User", default: null},
+        lockExpiration: {type: Date, default: null}
         
     }, {timestamps: true}
 );
