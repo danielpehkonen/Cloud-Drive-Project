@@ -12,7 +12,6 @@ Cloud Drive is a full-stack web application for editing, creating and sharing te
 - [Installation](#installation)
 - [Usage](#usage)
 - [Tests](#running-the-tests)
-- [API overview](#api-overview)
 - [Features](#features)
 - [Known limitations](#known-limitations)
 - [AI usage declaration](#ai-usage-declaration)
