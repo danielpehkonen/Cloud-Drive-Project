@@ -278,26 +278,6 @@ Use the theme button in the navigation bar to switch between the dark and light 
 
 Select **Logout** from the navigation bar.
 
-
-
-## Implemented features and target points
-
-| Feature | Target points |
-|---|---:|
-| Mandatory requirements | 25 |
-| React frontend framework | 3 |
-| WYSIWYG editor | 2 |
-| PDF download | 3 |
-| Creation and last-updated timestamps | 1 |
-| Document sorting | 1 |
-| Dark and light modes | 1 |
-| Ten automated Cypress tests | 4 |
-| Search functionality | 2 |
-| Pagination | 2 |
-| **Total** | **44** |
-
-
-
 ## AI usage declaration
 
 ChatGPT was used to create the structure of README, proofreading and explaining programming concepts.
